@@ -1,0 +1,8 @@
+.vscode
+*.exe
+*.obj
+*.bak
+*.orig
+*.log
+mbuild
+build
