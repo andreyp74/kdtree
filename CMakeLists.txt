@@ -26,11 +26,11 @@ add_executable(${PROJECT_NAME} ${PROJECT_SRC})
 
 include_directories(
     "${GTEST_INCLUDE_DIRS}"
-    "${GMOCK_INCLUDE_DIRS}"
+    #"${GMOCK_INCLUDE_DIRS}"
 )
 
 link_directories(
-    "${GTEST_LIBRARY_DIRS}"
+    "${CMAKE_BINARY_DIR}"
 )
 
 enable_testing()

@@ -1,26 +1,13 @@
-#include <vector>
+#pragma once
+
 #include <stack>
 #include <memory>
 #include <functional>
 #include <cmath>
 #include <assert.h>
 
-using point_type = std::vector<double>;
-using sample_type = std::vector<point_type>;
+#include "point_type.hpp"
 
-bool less_at(const point_type& p1, const point_type& p2, int idx) {
-	return p1.at(idx) < p2.at(idx);
-}
-
-double distance_squared(const point_type& p1, const point_type& p2) {
-	assert(p1.size() == p2.size());
-
-	double distance = .0;
-	for (size_t i = 0; i < p1.size(); ++i) {
-		distance += pow(p1.at(i) - p2.at(i), 2);
-	}
-	return distance;
-}
 
 class kd_tree {
 private:
@@ -85,15 +72,15 @@ public:
 		}
 	}
 
-	const point_type* nearest(const point_type& point) const {
+	std::pair<const point_type*, double> nearest(const point_type& point) const {
 		if (point.size() != dimension)
 			throw std::runtime_error("The input point dimension does not match kd_tree dimension");
 
 		std::stack<const kd_tree_node*> nodes;
 		nodes.push(root.get());
 
-		double closest_dist = .0;
-		const point_type* closest_point = nullptr;
+		double nearest_distance = .0;
+		const point_type* nearest_point = nullptr;
 
 		while(!nodes.empty()) {
 
@@ -101,39 +88,39 @@ public:
 			nodes.pop();
 
 			auto dist = distance_squared(point, node->point);
-			if (!closest_point || dist < closest_dist) {
-				closest_dist = dist;
-				closest_point = &(node->point);
+			if (!nearest_point || dist < nearest_distance) {
+				nearest_distance = dist;
+				nearest_point = &(node->point);
 			}
 
 			bool on_the_left = less_at(point, node->point, node->index);
 
 			const kd_tree_node* left_node = node->left.get();
 			if (left_node) {
-				point_type nearest_point(left_node->point); 
+				point_type current_point(left_node->point); 
 				if (on_the_left) {
-					nearest_point.at(left_node->index) = point.at(left_node->index);
+					current_point.at(left_node->index) = point.at(left_node->index);
 				}
 				else {
-					nearest_point.at(node->index) = node->point.at(node->index);
+					current_point.at(node->index) = node->point.at(node->index);
 				}
-				if (distance_squared(point, nearest_point) <= closest_dist)
+				if (distance_squared(point, current_point) <= nearest_distance)
 					nodes.push(left_node);
 			}
 			
 			const kd_tree_node* right_node = node->right.get();
 			if (right_node) {
-				point_type nearest_point(right_node->point);
+				point_type current_point(right_node->point);
 				if (!on_the_left) {
-					nearest_point.at(right_node->index) = point.at(right_node->index);
+					current_point.at(right_node->index) = point.at(right_node->index);
 				}
 				else {
-					nearest_point.at(node->index) = node->point.at(node->index);
+					current_point.at(node->index) = node->point.at(node->index);
 				}
-				if (distance_squared(point, nearest_point) <= closest_dist)
+				if (distance_squared(point, current_point) <= nearest_distance)
 					nodes.push(right_node);
 			}
 		}
-		return closest_point;
+		return { nearest_point, nearest_distance };
 	}
 };
